@@ -14,7 +14,8 @@ COPY sources.list /etc/apt/sources.list
 
 RUN \
   apt-get update && \
-  apt-get -y install tzdata  && \
-  apt install -y apache2 && \
-  apachectl start
+  apt-get -y install tzdata && \
+  apt install -y apache2 
+
+ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
 
