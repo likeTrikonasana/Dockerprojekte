@@ -12,10 +12,10 @@ export datadir=/var/data/workspace/dockerprojekte/dokuwiki/data
 docker volume create ralphdevwiki
 
 # run interactive dev
-docker run --name ralphdev -it -p 9000:80 --mount type=bind,source=$datadir,target=/data ralphsdokuwiki /bin/bash
+docker run --name ralphdev -it -p 9000:80 -v ralphdevwiki:/conf --mount type=bind,source=$datadir,target=/data ralphsdokuwiki /bin/bash
 
 # run detached, the first time the start takes some time, take any port required, here 9000
-docker run --name ralphdev -d -p 9000:80 --mount type=bind,source=$datadir,target=/data ralphsdokuwiki 
+docker run --name ralphdev -d -p 9000:80 -v ralphdevwiki:/conf --mount type=bind,source=$datadir,target=/data ralphsdokuwiki 
 
 # build with
 clear; docker build -t ralphsdokuwiki .
@@ -40,13 +40,14 @@ create volume ralphprodwiki
 
 
 # git checkout /depends on git server
-# example connect to ssh git server
+# example connect to ssh git server - a simple workflow
 
 . $gitworkspace/dokuwiki/bin/sshagent.sh
 
-# or:
-cd  $gitworkspace/dokuwiki/
-. bin/sshagent.sh
+git add *
+git commit -m"message"
+git push "dockerprojekte"
 
+# ToBeDone add github repo
 
 # eof
