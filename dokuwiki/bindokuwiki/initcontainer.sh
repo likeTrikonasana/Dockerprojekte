@@ -1,100 +1,31 @@
 #!/bin/bash
 
-backuprwe()
-(
-# $1 - WIKIDIR
-# $2 - BACKUPFILE
-
-# create tar to $2 from $1, $1 must not be a link, $2 must not be existent
-
-logrwe "==== backuprwe tar: $1 backup file: $2"
-if [ ! -L $1 ] && [ ! -f $2 ]; then
-# keep existing backup, may be generated externally, do not backup in case target is allready a link
-  logrwe "INFO tar -cvf $2 -C $1 ."
-  tar -cvf $2 -C $1 . 
-  rwelog "INFO create bakckup in $MOUNTCONF"
-  cp $2 $MOUNTCONF/
-else
-  logrwe "INFO backup not required tar $2 or link $1 exists, $1 exists as link"
-fi
-if [ -f $2 ]; then 
-  logrwe "INFO, backup file $2 exists"
-else
-  logrwe "ERROR, backup file $2 missing"
-  logrwe "INFO try to recover from $MOUNTCONF"
-  filename="${2##*/}"
-  cp $MOUNTCONF/$filename $RUNDIR/
-  if [ -f $2 ]; then
-    rwelog "INFO Recover successfull $2"
-  else
-    rwelog "ERROR recover failed $MOUNTCONF/$filename"
-  fi
-fi
-if [ -L $1 ]; then 
-  logrwe "INFO, link $1 exists"
-else
-  logrwe "WARN, link $1 missing, should be created in internal step"
-fi
-logrwe ""
-)
-
-checkexternal()
-(
-# $1 - DATADIR
-# $2 - BACKUPFILE
-# $3 - MOUNT
-# checkexternal $DIRDATA $DATABACKUP $MOUNTDATA
-
-logrwe "==== checkexternal source $1 backupfile $2 target for tar $3"
-if [ ! -d $1 ]; then 
-# if external structure $1 exists, keep this
-  logrwe "INFO creating dir mkdir -p $1"
-  mkdir -p $1
-  chown -R www-data $1
-  chgrp -R www-data $1
-  if [ -f $2 ]; then 
-    logrwe "INFO restore tar -xvf $2 -C $1"
-    tar -xvf $2 -C $1
-    logrwe "INFO chown to www-data $1"
-    chown -R www-data $1
-    chgrp -R www-data $1
-  else
-    if [ X$2 != XNOBACKUP ]; then
-      logrwe "ERROR Backupfile $2 not found"
-    fi
-  fi
-else
-  logrwe "INFO: external dir $1 found"
-fi
-logrwe ""
-)
-
-checkinternal()
-(
-# $1 - ext. dir
-# $2 - link in wiki
-logrwe "==== checkinternal external dir $1 linkfile in wiki $2"
-if [ -d $1 ]; then
-# $1 the external structure $1 must exist
-  echo "INFO creating link rm -rf $2; ln -s $1 $2"
-  rm -rf $2; ln -s $1 $2
-else
-  logrwe "ERREO external dir $1 does not exist"
-fi
-if [ -L $2 ]; then
-  logrwe "INFO Link $2 exist"
-else
-  logrwe "ERROR Link $2 does not exist"
-fi
-logrwe ""
-)
+#  ================ Functions ================"
 
 logrwe ()
 (
   echo $1 | tee -a $LOGFILE
 )
 
-# ----------------------------------------------------
+changepermissions()
+(
+if [ -f $1 ] || [ -d $1 ]; then
+  chown -R www-data $1
+  chgrp -R www-data $1
+fi
+)
+
+createdir ()
+(
+  if [ -d $1 ]; then
+    logrwe "INFO Dir $1 found"
+  else
+    logrwe "INFO creating Dir $1"
+    mkdir -p $1
+    changepermissions $1
+  fi
+)
+
 echo "================ Starting container ini ================" 
 
 # installationdirs
@@ -107,52 +38,31 @@ WIKIPLUGIN=$WIKIDIR/lib/plugins
 WIKIINC=$WIKIDIR/inc
 
 # externaldirs
-# conf, plugins -> /conf
-# data -> /data
+# /var/www -> /www
+# /var/www/dokuwiki/data -> /data/data
+# /var/www/farm -> /data/farm
 
-MOUNTCONF=/conf
-DIRCONF=$MOUNTCONF/conf
-DIRPLUGIN=$MOUNTCONF/plugins
-DIRINC=$MOUNTCONF/inc
+MOUNTCONF=/var/www
+MOUNTWIKI=$MOUNTCONF/dokuwiki
 
-MOUNTDATA=/data
-DIRDATA=$MOUNTDATA/data
-DIRFARMER=$MOUNTDATA/farm
+MOUNTPOINT=/data
+MOUNTDATA=$MOUNTPOINT/data
+MOUNTFARMER=$MOUNTPOINT/farm
 
 RUNDIR=/var/run/apache2
 ETCDIR=/etc/apache2
-DATABACKUP=$RUNDIR/databackup.tar
-CONFBACKUP=$RUNDIR/confbackup.tar
-PLUGINBACKUP=$RUNDIR/pluginorighbackup.tar
-PLUGINFARMERBACKUP=$RUNDIR/pluginbackup.tar
-INCBACKUP=$RUNDIR/incbackup.tar
+
+DATABACKUP=$RUNDIR/data.tgz
+WIKIBACKUP=$RUNDIR/dokuwiki-stable.tgz
+FARMERBACKUP=$RUNDIR/farmer.tgz
 
 LOGFILE=$RUNDIR/install.log
 
 if [ ! -d $RUNDIR ]; then
 # should exist
   rwelog "WARNING expect the rundir $RUNDIR should allready exist, please check this"
-  mkdir $RUNDIR
+  mkdir -p $RUNDIR
 fi
-
-backuprwe $WIKIDATA $DATABACKUP
-backuprwe $WIKICONF $CONFBACKUP
-backuprwe $WIKIPLUGIN $PLUGINBACKUP
-backuprwe $WIKIINC $INCBACKUP
-
-# check external structur
-checkexternal $DIRDATA $DATABACKUP $MOUNTDATA
-checkexternal $DIRCONF $CONFBACKUP $MOUNTCONF
-checkexternal $DIRPLUGIN $PLUGINBACKUP $MOUNTCONF
-checkexternal $DIRFARMER NOBACKUP $MOUNTDATA
-checkexternal $DIRINC $INCBACKUP $MOUNTCONF
-
-# check internal structur
-checkinternal $DIRDATA $WIKIDATA
-checkinternal $DIRCONF $WIKICONF
-checkinternal $DIRPLUGIN $WIKIPLUGIN
-checkinternal $DIRFARMER $WIKIFARM
-checkinternal $DIRINC $WIKIINC
 
 logrwe "INFO copy /etc/apache2/sites-available/apache2-dokuwiki.conf"
 cp $ETCDIR/sites-enabled/apache2-dokuwiki.conf.new /etc/apache2/sites-available/apache2-dokuwiki.conf
@@ -160,34 +70,6 @@ logrwe "INFO copy $ETCDIR/apache2.conf"
 cp $ETCDIR/apache2.conf.new $ETCDIR/apache2.conf
 logrwe "INFO copy /etc/apache2/envvars"
 cp $ETCDIR/envvars.new $ETCDIR/envvars
-# logrwe "INFO copy $RUNDIR/preload.php $WIKIINC/"
-
-cp $RUNDIR/preload.php $WIKIINC/
-chown -R www-data $WIKIINC/preload.php
-chgrp -R www-data $WIKIINC/preload.php
-
-if [ ! -d $WIKIPLUGIN/farmer ]; then
-  rwelog "INFO Farmer plugin not found, installing!"
-  mkdir -p $WIKIPLUGIN/farmer
-  tar -xvf $PLUGINFARMERBACKUP -C $WIKIPLUGIN/farmer .
-  chown -R www-data $WIKIPLUGIN/farmer
-  chgrp -R www-data $WIKIPLUGIN/farmer
-else
-  rwelog "INFO Farmer plugin found"
-fi
-
-# in case there is an external configuration delivered
-if [ -d $MOUNTDATA/conf ]; then
-# required, as MOUNTDATA/conf/ is accessable from outside, as MOUNTCONF/ is not
-  logrwe "INFO Default config found, restore cp $MOUNTDATA/conf/\* $DIRCONF/"
-  cp $MOUNTDATA/conf/* $DIRCONF/
-  chown -R www-data $DIRCONF/*
-  chgrp -R www-data $DIRCONF/*
-fi
-if [ -f $DIRCONF/install.php ]; then 
-  logrwe "INFO remove $DIRCONF/install.php to $DIRCONF/install.php.old"
-  mv $DIRCONF/install.php $DIRCONF/install.php.old
-fi
 
 # connect conf, plugins to docker volume
 
@@ -195,6 +77,65 @@ logrwe "INFO disable apache default site 000-default "
 a2dissite 000-default 
 logrwe "INFO activate apache wikisite apache2-dokuwiki "
 a2ensite apache2-dokuwiki
+
+logrwe "============ Install dokuwiki ============"
+
+if [ -d $WIKIDIR ]; then
+  logrwe "INFO $WIKIDIR exists, will be kept"
+else
+  logrwe "INFO Installing $WIKIDIR "
+  createdir $WIKIDIR
+  tar -xf  $WIKIBACKUP -C $WIKIDIR
+  changepermissions $WIKIROOT
+fi
+
+logrwe "============ Install farm ============"
+if [ -d $MOUNTFARMER ]; then
+  logrwe "INFO $MOUNTFARMER exists, will be kept"
+else
+  if [ -f $FARMERBACKUP ]; then
+    logrwe "INFO Installing $MOUNTFARMER "
+    createdir $MOUNTFARMER
+    tar -xf  $FARMERBACKUP -C $MOUNTFARMER
+    changepermissions $MOUNTFARMER
+  else
+    logrwe "INFO Creating Farmerdir $MOUNTFARMER, no backup $FARMERBACKUP found to be installed"
+    createdir $MOUNTFARMER
+  fi
+fi
+if [ -L $WIKIFARM ]; then
+  logrwe "INFO Link $WIKIFARM found"
+else
+  logrwe "INFO Creating link ln -s $MOUNTFARMER $WIKIFARM"
+  ln -s $MOUNTFARMER $WIKIFARM
+fi
+
+logrwe "============ Install data ============"
+if [ ! -d $MOUNTDATA ]; then
+  logrwe "INFO Create datadir $MOUNTDATA"
+  createdir $MOUNTDATA
+  tar -xf $DATABACKUP -C $MOUNTDATA
+  changepermissions $MOUNTDATA
+else
+  logrwe "INFO $MOUNTDATA exists, will be kept"
+fi
+if [ -L $WIKIDATA ]; then
+  logrwe "INFO Link $WIKIDATA found"
+else
+  if [ -d $WIKIDATA ]; then
+    logrwe "INFO Backup installed data dir $WIKIDATA to $MOUNTPOINT/data.backup "
+    tar -cf $MOUNTPOINT/data.backup -C $WIKIDATA .
+  fi
+  logrwe "INFO Creating link ln -s $MOUNTDATA $WIKIDATA"
+  rm -rf $WIKIDATA; ln -s $MOUNTDATA $WIKIDATA
+fi
+
+logrwe "============ cleanup ============"
+if [ -f $WIKICONF/install.php ]; then 
+  logrwe "INFO remove $DIRCONF/install.php to $DIRCONF/install.php.old"
+  mv $WIKICONF/install.php $DIRCONF/install.php.old
+fi
+
 
 logrwe "============ Finished container init ============"
 

@@ -10,7 +10,7 @@ LABEL maintainer="rwetri"
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Berlin
 
-COPY sources.list /etc/apt/sources.list
+COPY conf/sources.list /etc/apt/sources.list
 COPY conf/envvars /etc/apache2/envvars.new
 COPY conf/apache2.conf /etc/apache2/apache2.conf.new
 COPY bindokuwiki/startapache.sh /var/run/apache2/startapache.sh
@@ -18,9 +18,9 @@ COPY bindokuwiki/stopapache.sh /var/run/apache2/stopapache.sh
 COPY bindokuwiki/restartapache.sh /var/run/apache2/restartapache.sh
 COPY bindokuwiki/initcontainer.sh /var/run/apache2/initcontainer.sh
 COPY conf/apache2-dokuwiki.conf /etc/apache2/sites-enabled/apache2-dokuwiki.conf.new
-COPY conf/inc/preload.php /var/run/apache2/preload.php
-COPY data/confbackup.tar /var/run/apache2/confbackup.tar
-COPY data/pluginbackup.tar /run/apache2/pluginbackup.tar
+COPY src/dokuwiki-stable.tgz /run/apache2/dokuwiki-stable.tgz
+COPY src/farmer.tgz /run/apache2/farmer.tgz
+COPY src/data.tgz /run/apache2/data.tgz
 
 RUN \
   echo "==== Installing Dokuwiki  $DOKUWIKI_RELEASE ====" && \
@@ -33,27 +33,10 @@ RUN \
   apt-get -y install wget && \
   echo "==== Install apache2 ====" && \
   apt install -y apache2 && \
-  echo "==== Install dokuwiki $DOKUWIKI_RELEASE ====" && \
-  if [ -z ${DOKUWIKI_RELEASE+x} ]; then \
-         DOKUWIKI_RELEASE=$(wget https://download.dokuwiki.org/rss -O - 2>/dev/null | \
-                 xmlstarlet sel -T -t -v '/rss/channel/item[1]/link' | \
-                 cut -d'-' -f2-4 | cut -d'.' -f1 ); \
-  fi && \
-  echo "==== Using dokuwiki ${DOKUWIKI_RELEASE} ====" && \
-  curl -o \
-  /tmp/dokuwiki.tar.gz -L \
-         "https://github.com/splitbrain/dokuwiki/archive/release_stable_${DOKUWIKI_RELEASE}.tar.gz" && \
-  mkdir -p \
-         /var/www/dokuwiki && \
-  tar xf \
-         /tmp/dokuwiki.tar.gz -C \
-         /var/www/dokuwiki --strip-components=1 && \
   echo "==== Install php7.4 ====" && \
   apt-get -y install php7.4  && \
   apt-get -y install php-mbstring && \
   apt-get -y install php-xml && \
-  chown -R www-data /var/www/dokuwiki && \
-  chgrp -R www-data /var/www/dokuwiki && \
   echo "==== activate apache mods ====" && \
   a2enmod rewrite 
 

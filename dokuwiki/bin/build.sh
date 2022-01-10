@@ -17,25 +17,13 @@ fi
 
 . $ENVVARS
 
-# rwelog 'INFO copy dokuwiki confîg to data cp $DOCKERFILEPATH/conf/dokuwiki/* $DOCKERFILEPATH/data/conf/'
-# mkdir -p $DOCKERFILEPATH/data/conf/
-# cp $DOCKERFILEPATH/conf/dokuwiki/* $DOCKERFILEPATH/data/conf/
-
-
-# rwelog 'INFO copy farmers confîg to data cp $DOCKERFILEPATH/conf/farmer/* $DOCKERFILEPATH/data/farmerconf/'
-# mkdir -p $DOCKERFILEPATH/data/farmerconf/
-# cp -r $DOCKERFILEPATH/conf/farmer/* $DOCKERFILEPATH/data/farmerconf/
-
-# files which will be copied in Dokufile
-rwelog "INFO tar -cvf $DOCKERFILEPATH/data/dokuwiki.conf.tar -C $DOCKERFILEPATH/conf/dokuwiki/ ."
-tar -cvf $DOCKERFILEPATH/data/confbackup.tar -C $DOCKERFILEPATH/conf/dokuwiki/ .
-rwelog "INFO tar -cvf $DOCKERFILEPATH/data/farmer.plugin.tar -C $DOCKERFILEPATH/conf/plugins/farmer/ ."
-tar -cvf $DOCKERFILEPATH/data/pluginbackup.tar -C $DOCKERFILEPATH/conf/plugins/farmer/ .
-
-# echo docker build -f $DOCKERFILEPATH -t $IMAGE .
-echo docker volume create $VOLUME
-
-rwelog "INFO buils.sh"
+VOLC=`docker volume ls | grep -c $VOLUME`
+if [ X$VOLC = X0 ]; then 
+  rwelog "INFO docker volume not found, volume create $VOLUME"
+  docker volume create $VOLUME
+else
+  rwelog "INFO docker volume $VOLUME found"
+fi
 echo "docker build -t $IMAGE ."
 
 # eof
