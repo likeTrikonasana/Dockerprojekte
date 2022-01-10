@@ -18,9 +18,9 @@ COPY bindokuwiki/stopapache.sh /var/run/apache2/stopapache.sh
 COPY bindokuwiki/restartapache.sh /var/run/apache2/restartapache.sh
 COPY bindokuwiki/initcontainer.sh /var/run/apache2/initcontainer.sh
 COPY conf/apache2-dokuwiki.conf /etc/apache2/sites-enabled/apache2-dokuwiki.conf.new
-COPY conf/inc/preload.php /var/run/apache2/preload.php
 COPY data/confbackup.tar /var/run/apache2/confbackup.tar
-COPY data/pluginbackup.tar /run/apache2/pluginbackup.tar
+COPY data/dokuwiki-stable.tgz /tmp/dokuwiki.tar.gz
+
 
 RUN \
   echo "==== Installing Dokuwiki  $DOKUWIKI_RELEASE ====" && \
@@ -34,15 +34,6 @@ RUN \
   echo "==== Install apache2 ====" && \
   apt install -y apache2 && \
   echo "==== Install dokuwiki $DOKUWIKI_RELEASE ====" && \
-  if [ -z ${DOKUWIKI_RELEASE+x} ]; then \
-         DOKUWIKI_RELEASE=$(wget https://download.dokuwiki.org/rss -O - 2>/dev/null | \
-                 xmlstarlet sel -T -t -v '/rss/channel/item[1]/link' | \
-                 cut -d'-' -f2-4 | cut -d'.' -f1 ); \
-  fi && \
-  echo "==== Using dokuwiki ${DOKUWIKI_RELEASE} ====" && \
-  curl -o \
-  /tmp/dokuwiki.tar.gz -L \
-         "https://github.com/splitbrain/dokuwiki/archive/release_stable_${DOKUWIKI_RELEASE}.tar.gz" && \
   mkdir -p \
          /var/www/dokuwiki && \
   tar xf \

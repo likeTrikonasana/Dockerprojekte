@@ -94,6 +94,25 @@ logrwe ()
   echo $1 | tee -a $LOGFILE
 )
 
+installfarmer()
+(
+
+if [ ! -d $WIKIPLUGIN/farmer ]; then
+  rwelog "INFO Farmer plugin not found, installing!"
+  mkdir -p $WIKIPLUGIN/farmer
+  tar -xvf $PLUGINFARMERBACKUP -C $WIKIPLUGIN/farmer .
+  chown -R www-data $WIKIPLUGIN/farmer
+  chgrp -R www-data $WIKIPLUGIN/farmer
+else
+  rwelog "INFO Farmer plugin found"
+fi
+)
+
+permission ()
+(
+chown -R www-data $1
+chgrp -R www-data $1
+)
 # ----------------------------------------------------
 echo "================ Starting container ini ================" 
 
@@ -124,7 +143,6 @@ ETCDIR=/etc/apache2
 DATABACKUP=$RUNDIR/databackup.tar
 CONFBACKUP=$RUNDIR/confbackup.tar
 PLUGINBACKUP=$RUNDIR/pluginorighbackup.tar
-PLUGINFARMERBACKUP=$RUNDIR/pluginbackup.tar
 INCBACKUP=$RUNDIR/incbackup.tar
 
 LOGFILE=$RUNDIR/install.log
@@ -134,6 +152,8 @@ if [ ! -d $RUNDIR ]; then
   rwelog "WARNING expect the rundir $RUNDIR should allready exist, please check this"
   mkdir $RUNDIR
 fi
+
+permission $WIKIROOT
 
 backuprwe $WIKIDATA $DATABACKUP
 backuprwe $WIKICONF $CONFBACKUP
@@ -151,7 +171,7 @@ checkexternal $DIRINC $INCBACKUP $MOUNTCONF
 checkinternal $DIRDATA $WIKIDATA
 checkinternal $DIRCONF $WIKICONF
 checkinternal $DIRPLUGIN $WIKIPLUGIN
-checkinternal $DIRFARMER $WIKIFARM
+# checkinternal $DIRFARMER $WIKIFARM
 checkinternal $DIRINC $WIKIINC
 
 logrwe "INFO copy /etc/apache2/sites-available/apache2-dokuwiki.conf"
@@ -162,27 +182,27 @@ logrwe "INFO copy /etc/apache2/envvars"
 cp $ETCDIR/envvars.new $ETCDIR/envvars
 # logrwe "INFO copy $RUNDIR/preload.php $WIKIINC/"
 
-cp $RUNDIR/preload.php $WIKIINC/
-chown -R www-data $WIKIINC/preload.php
-chgrp -R www-data $WIKIINC/preload.php
+# farmer in future
+# cp $RUNDIR/preload.php $WIKIINC/
+# chown -R www-data $WIKIINC/preload.php
+# chgrp -R www-data $WIKIINC/preload.php
 
-if [ ! -d $WIKIPLUGIN/farmer ]; then
-  rwelog "INFO Farmer plugin not found, installing!"
-  mkdir -p $WIKIPLUGIN/farmer
-  tar -xvf $PLUGINFARMERBACKUP -C $WIKIPLUGIN/farmer .
-  chown -R www-data $WIKIPLUGIN/farmer
-  chgrp -R www-data $WIKIPLUGIN/farmer
-else
-  rwelog "INFO Farmer plugin found"
-fi
+# if [ ! -d $WIKIPLUGIN/farmer ]; then
+#   rwelog "INFO Farmer plugin not found, installing!"
+#   mkdir -p $WIKIPLUGIN/farmer
+#   tar -xvf $PLUGINFARMERBACKUP -C $WIKIPLUGIN/farmer .
+#   chown -R www-data $WIKIPLUGIN/farmer
+#   chgrp -R www-data $WIKIPLUGIN/farmer
+# else
+#   rwelog "INFO Farmer plugin found"
+# fi
 
 # in case there is an external configuration delivered
 if [ -d $MOUNTDATA/conf ]; then
 # required, as MOUNTDATA/conf/ is accessable from outside, as MOUNTCONF/ is not
   logrwe "INFO Default config found, restore cp $MOUNTDATA/conf/\* $DIRCONF/"
   cp $MOUNTDATA/conf/* $DIRCONF/
-  chown -R www-data $DIRCONF/*
-  chgrp -R www-data $DIRCONF/*
+  permission $DIRCONF
 fi
 if [ -f $DIRCONF/install.php ]; then 
   logrwe "INFO remove $DIRCONF/install.php to $DIRCONF/install.php.old"

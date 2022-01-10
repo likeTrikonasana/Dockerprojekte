@@ -1,1 +1,0 @@
-Hier können die grundlegenden Eigenschaften der Farm konfiguriert werden. Beachten Sie, dass alle Einstellungen hier alle Animals beeinflussen werden.

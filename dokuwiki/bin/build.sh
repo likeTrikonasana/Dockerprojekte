@@ -29,13 +29,13 @@ fi
 # files which will be copied in Dokufile
 rwelog "INFO tar -cvf $DOCKERFILEPATH/data/dokuwiki.conf.tar -C $DOCKERFILEPATH/conf/dokuwiki/ ."
 tar -cvf $DOCKERFILEPATH/data/confbackup.tar -C $DOCKERFILEPATH/conf/dokuwiki/ .
-rwelog "INFO tar -cvf $DOCKERFILEPATH/data/farmer.plugin.tar -C $DOCKERFILEPATH/conf/plugins/farmer/ ."
-tar -cvf $DOCKERFILEPATH/data/pluginbackup.tar -C $DOCKERFILEPATH/conf/plugins/farmer/ .
+
+# farmer
+#rwelog "INFO tar -cvf $DOCKERFILEPATH/data/farmer.plugin.tar -C $DOCKERFILEPATH/conf/plugins/farmer/ ."
+#tar -cvf $DOCKERFILEPATH/data/pluginbackup.tar -C $DOCKERFILEPATH/conf/plugins/farmer/ .
 
 # echo docker build -f $DOCKERFILEPATH -t $IMAGE .
 echo docker volume create $VOLUME
-
-rwelog "INFO buils.sh"
 echo "docker build -t $IMAGE ."
 
 # eof
