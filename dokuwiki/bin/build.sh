@@ -17,13 +17,17 @@ fi
 
 . $ENVVARS
 
-VOLC=`docker volume ls | grep -c $VOLUME`
+VOLC=`docker volume ls | grep -c $VOLUMEDEV`
 if [ X$VOLC = X0 ]; then 
   rwelog "INFO docker volume not found, volume create $VOLUME"
-  docker volume create $VOLUME
+  docker volume create $VOLUMEDEV
 else
-  rwelog "INFO docker volume $VOLUME found"
+  rwelog "INFO docker volume $VOLUMEDEV found"
 fi
-echo "docker build -t $IMAGE ."
+rwelog "Build dev"
+echo "docker build -t $IMAGEDEV ."
+
+rwelog "Build prod"
+echo "docker build -t $IMAGEPROD ."
 
 # eof

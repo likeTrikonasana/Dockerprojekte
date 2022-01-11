@@ -17,28 +17,29 @@ else
 
 . $ENVVARS
 
-rwelog "INFO stop running processes $NAME"
-PIDC=`docker ps | grep -c $NAME`
+rwelog "INFO stop running processes $NAMEDEV"
+PIDC=`docker ps | grep -c $NAMEDEV`
 if [ X$PIDC != X0 ]; then
-  docker stop `docker ps | grep $NAME | cut -f1 -d\  `
+  rwelog "INFO docker stop `docker ps | grep $NAMEDEV | cut -f1 -d\  `"
+  docker stop `docker ps | grep $NAMEDEV | cut -f1 -d\  `
 fi
 
-rwelog "INFO stop containers $NAME"
-PIDC=`docker ps -a | grep -c $NAME`
+rwelog "INFO stop containers $NAMEDEV"
+PIDC=`docker ps -a | grep -c $NAMEDEV`
 if [ X$PIDC != X0 ]; then
-  for i in `docker ps -a | grep $NAME | cut -f1 -d\ `; do docker rm $i; done
+  for i in `docker ps -a | grep $NAMEDEV | cut -f1 -d\ `; do docker rm $i; done
 fi
 
-rwelog "INFO delete images $IMAGE $NAME"
-PIDC=`docker images | grep -c $IMAGE`
+rwelog "INFO delete images $IMAGEDEV $NAMEDEV, only latest"
+PIDC=`docker images $IMAGEDEV -q | wc -l`
 if [ X$PIDC != X0 ]; then
-  PID=`docker images | grep $IMAGE | cut -f3 -d\t | sed -e "s%^ *%%g" | cut -f1 -d\ `
+  PID=`docker images $IMAGEDEV -q`
   docker rmi $PID
 fi
 
 if [ X$1 = Xall ]; then
   rwelog "INFO Deleting volume $1"
-  docker volume rm $VOLUME
+  docker volume rm $VOLUMEDEV
   if [ -d $DATADIR ] ; then
   rm -rf $DATADIR/data
   rm -rf $DATADIR/conf

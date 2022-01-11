@@ -25,8 +25,13 @@ else
 
 . $ENVVARS
 
-echo "docker run --name $CONATINER -it -p $PORT:80 -v $VOLUME:/var/www --mount type=bind,source=$DATADIR,target=/data $IMAGE /bin/bash"
-echo "docker run --name $CONATINER -p $PORT:80 -v $VOLUME:/var/www --mount type=bind,source=$DATADIR,target=/data $IMAGE "
+rwelog "INFO All dev runs"
+echo "docker run --name $CONATINERDEV -it -p $PORTDEV:80 -v $VOLUMEDEV:/var/www --mount type=bind,source=$DATADIR,target=/data $IMAGEDEV /bin/bash"
+echo "docker run --name $CONATINERDEV -d -p $PORTDEV:80 -v $VOLUMEDEV:/var/www --mount type=bind,source=$DATADIR,target=/data $IMAGEDEV "
 echo docker start ralphdev
+
+rwelog "INFO All prod runs"
+echo "docker run --name $CONATINERPROD -it -p $PORTPROD:80 -v $VOLUMEPROD:/var/www -v $VOLUMENFS:/data $IMAGEPROD /bin/bash"
+echo "docker run --name $CONATINERPROD -d -p $PORTPROD:80 -v $VOLUMEPROD:/var/www -v $VOLUMENFS:/data $IMAGEPROD"
 
 fi

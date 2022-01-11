@@ -37,6 +37,8 @@ RUN \
   apt-get -y install php7.4  && \
   apt-get -y install php-mbstring && \
   apt-get -y install php-xml && \
+  apt-get -y autoremove && \
+  apt-get -y clean && \
   echo "==== activate apache mods ====" && \
   a2enmod rewrite 
 
