@@ -17,6 +17,7 @@ else
 
 . $ENVVARS
 
+# --------------- Prozesses ---------------------------------
 rwelog "INFO stop running processes $NAMEDEV"
 PIDC=`docker ps | grep -c $NAMEDEV`
 if [ X$PIDC != X0 ]; then
@@ -24,12 +25,14 @@ if [ X$PIDC != X0 ]; then
   docker stop `docker ps | grep $NAMEDEV | cut -f1 -d\  `
 fi
 
+# --------------- Container ---------------------------------
 rwelog "INFO stop containers $NAMEDEV"
 PIDC=`docker ps -a | grep -c $NAMEDEV`
 if [ X$PIDC != X0 ]; then
   for i in `docker ps -a | grep $NAMEDEV | cut -f1 -d\ `; do docker rm $i; done
 fi
 
+# --------------- Images ---------------------------------
 rwelog "INFO delete images $IMAGEDEV $NAMEDEV, only latest"
 PIDC=`docker images $IMAGEDEV -q | wc -l`
 if [ X$PIDC != X0 ]; then
@@ -37,8 +40,9 @@ if [ X$PIDC != X0 ]; then
   docker rmi $PID
 fi
 
+# --------------- Volume / Data ---------------------------------
 if [ X$1 = Xall ]; then
-  rwelog "INFO Deleting volume $1"
+  rwelog "INFO Deleting volume $VOLUMEDEV"
   docker volume rm $VOLUMEDEV
   if [ -d $DATADIR ] ; then
   rm -rf $DATADIR/data

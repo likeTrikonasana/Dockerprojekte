@@ -3,9 +3,6 @@
 CONATINERDEV=ralphdev
 CONATINERPROD=ralphprod
 
-VOLUMEDEV=ralphdevwiki
-VOLUMEPROD=ralphprodwiki
-
 WORKSPACE=/var/data/workspace/dockerprojekte
 
 DATADIR=$WORKSPACE/dokuwiki/data
@@ -17,7 +14,7 @@ PORTPROD=9001
 NAMEDEV=ralphdev
 NAMEPROD=ralphprod
 
-IMAGEDEV=dokuwikidev
+IMAGEDEV=dokuwikidev:1.1
 IMAGEPROD=rwetri/ralphsdokuwiki:1.0
 
 VOLUMEDEV=ralphwikidev
