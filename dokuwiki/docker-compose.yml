@@ -1,0 +1,41 @@
+version: "3.9"
+
+volumes:
+
+    ralphwikidev:
+      name: ralphwikidev
+      external: true
+
+    ralphwikiprod:
+      name: ralphwikiprod
+      external: true
+
+    ralphnfswiki:
+      name: ralphnfswiki
+      driver_opts:
+        type: "nfs"
+        o: "addr=192.168.3.10,rw"
+        device: ":/volume1/wikidata"
+
+services:
+
+    wikidev:
+      build: .
+      ports:
+        - 9002:80
+      volumes:
+        - ralphwikidev:/var/www
+        - /var/data/workspace/dockerprojekte/dokuwiki/data:/data
+      image: "ralphsdokuwiki"
+      profiles: ["dev"]
+
+
+    wikiprod:
+      build: .
+      ports:
+        - 9002:80
+      volumes:
+        - ralphwikiprod:/var/www
+        - ralphnfswiki:/data
+      image: "rwetri/ralphsdokuwiki:1.0"
+      profiles: ["prod"]
