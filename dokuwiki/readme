@@ -1,0 +1,50 @@
+# kleine Doku zu Build un run
+
+# Step 0 Umgebung - Werte anpassen (oder lassen)
+
+# bin/envvars.sh
+
+# Step 1 Volumes
+
+# intern PHP Anwendung
+# docker volume create $VOLUMEDEV
+
+# extern: bind (DATADIR)
+
+# oder NFS (bzw jede eigene andere Lösung):
+# docker volume create --driver local \
+#   --opt type=nfs \
+#   --opt o=addr=192.168.3.10,rw \
+#   --opt device=:/volume1/wikidata \
+#   ralphnfswiki
+
+# Step 2 Build (meine Umgebung
+
+# Build dev
+# docker build -t dokuwikidev:1.1 .
+
+# Build prod
+# docker build -t rwetri/ralphsdokuwiki:1.0 .
+
+# Step 3 Run
+
+# INFO All dev runs
+# zum Ausprobieren
+# docker run --name ralphdev -it -p 9000:80 -v ralphwikidev:/var/www --mount type=bind,source=/var/data/workspace/dockerprojekte/dokuwiki/data,target=/data dokuwikidev:1.1 /bin/bash
+# Applikation starten
+# docker run --name ralphdev -d -p 9000:80 -v ralphwikidev:/var/www --mount type=bind,source=/var/data/workspace/dockerprojekte/dokuwiki/data,target=/data dokuwikidev:1.1
+
+# INFO All prod runs
+# zum Ausprobieren
+# docker run --name ralphprod -it -p 9001:80 -v ralphwikiprod:/var/www -v ralphnfswiki:/data rwetri/ralphsdokuwiki:1.0 /bin/bash
+# Applikation starten (hier die NFS Datenvariante)
+# docker run --name ralphprod -d -p 9001:80 -v ralphwikiprod:/var/www -v ralphnfswiki:/data rwetri/ralphsdokuwiki:1.0
+
+# or use compose (auch müssen die Volumes bereits zur Verfügugn stehen
+# !!!! Leider fehlte mir die Zeit, hier noch auf die Umgebung mit den envvars umzustellen. Daher müssen Anpassungen direkt im Composefile erfolgen. Version 1.1.
+
+# Dev
+# docker-compose --profile dev up
+# prod
+# docker-compose --profile prod up
+
